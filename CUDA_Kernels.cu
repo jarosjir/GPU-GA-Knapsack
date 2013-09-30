@@ -30,7 +30,6 @@
 #include <limits.h>
 #include "Random123/philox.h"
 #include <stdio.h>
-#include <cutil_inline.h>
 
 #include "GPU_Population.h"
 #include "Parameters.h"
@@ -92,25 +91,40 @@ __device__ void HalfWarpReduceGene  (volatile TGene* sdata, int tid);
 
 
 /*
- * Constructor of the lock
+ * Create a log 
  */
-TGPU_Lock::TGPU_Lock(void){
-    
+TGPU_Lock::TGPU_Lock() : mutex(NULL), reference_counter(0){
+
     int state = 0;
-    cutilSafeCall(cudaMalloc((void**)& mutex, sizeof(int)));
-    cutilSafeCall(cudaMemcpy(mutex, &state, sizeof(int), cudaMemcpyHostToDevice));
-    
+    cudaMalloc(&mutex, sizeof(int));
+    CheckAndReportCudaError(__FILE__,__LINE__);
+
+    reference_counter++;
+
+    cudaMemcpy(mutex, &state, sizeof(int), cudaMemcpyHostToDevice);
+    CheckAndReportCudaError(__FILE__,__LINE__);
 }// end of TGPU_Lock
+
+/*
+ * Copy constructor
+ */
+TGPU_Lock::TGPU_Lock(const TGPU_Lock& orig): mutex(orig.mutex), reference_counter(orig.reference_counter + 1)
+{
+}// end of TGPU_Lock
+
 
 //------------------------------------------------------------------------------
 
 /*
  * Destructor of the lock
  */
-TGPU_Lock::~TGPU_Lock(void){
-    
-    cudaFree(mutex);
-        
+TGPU_Lock::~TGPU_Lock(){
+    reference_counter--;
+    if (reference_counter == 0)
+    {
+      cudaFree(mutex);     
+      CheckAndReportCudaError(__FILE__,__LINE__);
+    }
 }// end of ~TGPU_Lock
 //------------------------------------------------------------------------------
 
@@ -145,6 +159,25 @@ __device__ void TGPU_Lock::Unlock( void ){
 //                          DeviceFunctions Kernels                           //
 //----------------------------------------------------------------------------//
 
+
+/**
+  * Check and report CUDA errors
+  * if there's an error the code exits
+  */
+void CheckAndReportCudaError(const char * SourceFileName, const int SourceLineNumber)
+{
+  cudaError_t cudaError = cudaGetLastError();
+  
+  if (cudaError != cudaSuccess) {
+
+    std::cerr << "Error in the CUDA routine: \"";
+    std::cerr <<  cudaGetErrorString(cudaError) << "\"" << std::endl;
+    std::cerr << "File name: " << SourceFileName << std::endl;
+    std::cerr << "Line number: " << SourceLineNumber << std::endl;
+    exit(EXIT_FAILURE);
+  } 
+}// end of CheckAndReportCudaError
+//------------------------------------------------------------------------------
 
 
 /*

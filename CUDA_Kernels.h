@@ -40,20 +40,26 @@
 /*
  * GPU mutex (binary lock)
  */
-struct TGPU_Lock
+class TGPU_Lock
 {
-    int *mutex;
+public:
+    int * mutex;
 
-    TGPU_Lock(void);
-    ~TGPU_Lock(void);
+    TGPU_Lock();
+    TGPU_Lock(const TGPU_Lock& orig);
+    ~TGPU_Lock();   
 
-    __device__ void Lock(void);
-    __device__ void Unlock(void);
+    __device__ void Lock();
+    __device__ void Unlock();
+
+private:
+    long reference_counter; /// MUST be becacuse I can't pass a class by pointer or by reference  
+  
 };// end of TGPU_Lock
 //------------------------------------------------------------------------------
 
-
-
+/// Check and report CUDA errors
+void CheckAndReportCudaError(const char * SourceFileName, const int SourceLineNumber);
 
 
 // First Population generation
