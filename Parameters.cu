@@ -162,8 +162,8 @@ void TParameters::LoadParametersFromCommandLine(int argc, char **argv){
  */
 void TParameters::StoreParamsOnGPU(){
             
-        cudaMemcpyToSymbol("GPU_EvolutionParameters", &EvolutionParameters, sizeof(TEvolutionParameters) )
     checkCudaErrors(
+        cudaMemcpyToSymbol(GPU_EvolutionParameters, &EvolutionParameters, sizeof(TEvolutionParameters) )
     );
     
    

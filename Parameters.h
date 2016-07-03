@@ -68,6 +68,7 @@ struct TEvolutionParameters{
 
 
 
+__constant__  TEvolutionParameters GPU_EvolutionParameters;
 
 
 /*
