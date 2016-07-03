@@ -26,7 +26,7 @@
  * Created on 24 March 2012, 00:00 PM
  */
 
-#include <cutil_inline.h>
+#include <helper_cuda.h>
 #include <sstream>
 
 #include "GPU_Statistics.h"
@@ -154,13 +154,13 @@ void TGPU_Statistics::AllocateCudaMemory(){
     //------------ Host data ---------------//
     
     // Allocate basic Host structure 
-    cutilSafeCall( 
+    checkCudaErrors(
             cudaHostAlloc((void**)&HostData,  sizeof(TStatisticsData)
                            ,cudaHostAllocDefault )
             );		
     
     // Allocate best individual on the host side
-    cutilSafeCall( 
+    checkCudaErrors(
             cudaHostAlloc((void**)&HostBestIndividual,  sizeof(TGene) * TParameters::GetInstance()->ChromosomeSize()                        
                            ,cudaHostAllocDefault)
             );		
@@ -169,7 +169,7 @@ void TGPU_Statistics::AllocateCudaMemory(){
     //------------ Device data ---------------//
         
     // Allocate data structure on host side
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaMalloc((void**)&DeviceData,  sizeof(TStatisticsData))
            );		
        
@@ -185,18 +185,18 @@ void TGPU_Statistics::FreeCudaMemory(){
        
     
     // Free CPU Best individual 
-    cutilSafeCall( 
+    checkCudaErrors(
             cudaFreeHost(HostBestIndividual)
             );
     
     // Free structure in host memory
-    cutilSafeCall( 
+    checkCudaErrors(
             cudaFreeHost(HostData)
             );
             
     
     // Free whole structure
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaFree(DeviceData)
            );  
     
@@ -219,7 +219,7 @@ void TGPU_Statistics::CopyOut(TGPU_Population * Population, bool PrintBest){
     TParameters * Params = TParameters::GetInstance(); 
     
     // Copy 4 statistics values 
-    cutilSafeCall( 
+    checkCudaErrors(
          cudaMemcpy(HostData, DeviceData, sizeof(TStatisticsData), 
                     cudaMemcpyDeviceToHost)
          );    
@@ -251,7 +251,7 @@ void TGPU_Statistics::InitStatistics(){
             
     
     // Copy 4 statistics values 
-    cutilSafeCall( 
+    checkCudaErrors(
          cudaMemcpy(DeviceData, HostData, sizeof(TStatisticsData), 
                     cudaMemcpyHostToDevice)
          );    
