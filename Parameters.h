@@ -24,6 +24,7 @@
  *
  * 
  * Created on 30 March 2012, 00:00 PM
+ * Modified on 17 February 2017: 19:59
  */
 
 
@@ -67,8 +68,6 @@ struct TEvolutionParameters{
 //------------------------------------------------------------------------------
 
 
-
-__constant__  TEvolutionParameters GPU_EvolutionParameters;
 
 
 /*

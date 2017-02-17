@@ -24,10 +24,12 @@
  *
  * 
  * Created on 30 March 2012, 00:00 PM
+ * Modified on 17 February 2017, 15:59
  */
 
 
 #include <iostream>
+#include <getopt.h>
 
 #include <helper_cuda.h>
 #include <cuda_runtime.h>
@@ -37,6 +39,8 @@
 //----------------------------------------------------------------------------//
 //                              Definitions                                   //
 //----------------------------------------------------------------------------//
+
+__constant__  TEvolutionParameters GPU_EvolutionParameters;
 
 
 // Singleton initialization 

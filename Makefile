@@ -23,20 +23,21 @@
 #      
 #
 # 
-# Created on 24 March 2012, 00:00 PM
+# Created on 24 March 2012, 00:00
+# Last midification on 17 February 2017, 15:54
 #
 
 
 # Environment
 CC=nvcc
 CXX=nvcc
-CXXFLAGS= -arch=sm_20 -Xptxas=-v -m64 -O3 
+CXXFLAGS= -Xptxas=-v -m64 -O3  --device-c
 TARGET=gpu_knapsack
 LDFLAGS=
 
 #----------------------------------------------------------------
 # CHANGE PATHS to CUDA!!
-CXXINCLUDE=-I/usr/local/NVIDIA_GPU_Computing_SDK/shared/inc -I/usr/local/NVIDIA_GPU_Computing_SDK/C/common/inc/
+CXXINCLUDE=-I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc
 #----------------------------------------------------------------
 
 all:		$(TARGET)	
@@ -58,7 +59,7 @@ clean:
 	/bin/rm -f *.o *.~ $(TARGET)
 
 run:
-	./gpu_knapsack -f ./Data/knap_40.txt -p 100 -g 50 -s 1
+	./gpu_knapsack -f ./Data/knap_40.txt -p 100 -g 10000 -s 10
 
 	
 

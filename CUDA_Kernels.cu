@@ -24,6 +24,7 @@
  *
  * 
  * Created on 30 March 2012, 00:00 PM
+ * Modified on 17 February 2017, 15:58
  */
 
 
@@ -43,6 +44,7 @@
 //----------------------------------------------------------------------------//
 
 
+extern __constant__  TEvolutionParameters GPU_EvolutionParameters;
 
 
 using namespace r123;
