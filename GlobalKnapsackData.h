@@ -59,7 +59,7 @@ public:
     TKnapsackData * HostData;   // Host copy of global data (read from file)
     
     // Constructor of the class
-    TGlobalKnapsackData();
+    TGlobalKnapsackData() : DeviceData(NULL), HostData(NULL), FDeviceItemPriceHandler(NULL), FDeviceItemWeightHandler(NULL) {};
     
     // Destructor of the class
     virtual ~TGlobalKnapsackData();

@@ -88,6 +88,7 @@ void TGPU_Statistics::Calculate(TGPU_Population * Population, bool PrintBest){
     CalculateStatistics
             <<<TParameters::GetInstance()->GetGPU_SM_Count()*2, BLOCK_SIZE >>>
             (DeviceData, Population->DeviceData, GPU_Lock);
+    CheckAndReportCudaError(__FILE__,__LINE__);
     
     // Copy statistics down to host
     CopyOut(Population, PrintBest);

@@ -59,10 +59,12 @@ TGPU_Evolution::TGPU_Evolution(){
     
     // Select device 
     cudaSetDevice(pDeviceIdx);
-    
+    CheckAndReportCudaError(__FILE__,__LINE__);    
+
     // Get parameters of the device
     cudaDeviceProp 	prop;	
     cudaGetDeviceProperties (&prop, pDeviceIdx);
+    CheckAndReportCudaError(__FILE__,__LINE__);
    
     pMultiprocessorCount = prop.multiProcessorCount;
     Params->SetGPU_SM_Count(prop.multiProcessorCount);
@@ -74,10 +76,7 @@ TGPU_Evolution::TGPU_Evolution(){
     // Create populations on GPU
     MasterPopulation    = new TGPU_Population(Params->PopulationSize(), Params->ChromosomeSize());    
     OffspringPopulation = new TGPU_Population(Params->OffspringPopulationSize(), Params->ChromosomeSize());
-    
-    MigrationPopulation_In  = new TGPU_Population(Params->EmigrantCount(), Params->ChromosomeSize());
-    MigrationPopulation_Out = new TGPU_Population(Params->EmigrantCount(), Params->ChromosomeSize());
-        
+            
     // Create statistics
     GPUStatistics = new TGPU_Statistics();
 
@@ -98,10 +97,7 @@ TGPU_Evolution::~TGPU_Evolution(){
     
     delete MasterPopulation;    
     delete OffspringPopulation;
-    
-    delete MigrationPopulation_In;
-    delete MigrationPopulation_Out;
-        
+            
     delete GPUStatistics;
 
     
@@ -164,6 +160,7 @@ void TGPU_Evolution::Initialize(){
     FirstPopulationGenerationKernel
             <<<pMultiprocessorCount * 2, BLOCK_SIZE>>>
             (MasterPopulation->DeviceData, GetSeed());
+    CheckAndReportCudaError(__FILE__,__LINE__);
 
     dim3 Blocks; 
     dim3 Threads;
@@ -183,7 +180,7 @@ void TGPU_Evolution::Initialize(){
     CalculateKnapsackFintess
             <<<Blocks, Threads>>>
                 (MasterPopulation->DeviceData, GlobalData.DeviceData);
-    
+    CheckAndReportCudaError(__FILE__,__LINE__);
      
 }// end of TGPU_Evolution
 //------------------------------------------------------------------------------
@@ -222,8 +219,7 @@ void TGPU_Evolution::RunEvolutionCycle(){
           GeneticManipulationKernel
                   <<<Blocks, Threads>>>
                   (MasterPopulation->DeviceData, OffspringPopulation->DeviceData, GetSeed());
-
-
+          CheckAndReportCudaError(__FILE__,__LINE__);
 
           //----------- Evaluation ---------//
 
@@ -237,7 +233,7 @@ void TGPU_Evolution::RunEvolutionCycle(){
           CalculateKnapsackFintess
                 <<<Blocks, Threads>>>
                     (OffspringPopulation->DeviceData, GlobalData.DeviceData);
-
+          CheckAndReportCudaError(__FILE__,__LINE__);
 
 
 
@@ -255,6 +251,7 @@ void TGPU_Evolution::RunEvolutionCycle(){
           ReplacementKernel
                   <<<Blocks, Threads>>>
                   (MasterPopulation->DeviceData, OffspringPopulation->DeviceData, GetSeed());
+         CheckAndReportCudaError(__FILE__,__LINE__);
 
          
           if (pActGeneration % Params->StatisticsInterval() == 0){

@@ -39,25 +39,12 @@
 //----------------------------------------------------------------------------//
 
 
-static const char * ERROR_FILE_NOT_FOUND = "Global Benchmark Data: File not found";
+static const char * const ERROR_FILE_NOT_FOUND = "Global Benchmark Data: File not found";
 
 
 //----------------------------------------------------------------------------//
 //                              public methods                                //
 //----------------------------------------------------------------------------//
-
-/*
- * Constructor of the class
- */
-TGlobalKnapsackData::TGlobalKnapsackData(){
-    DeviceData = NULL;
-    HostData   = NULL;
-    
-    FDeviceItemPriceHandler  = NULL;
-    FDeviceItemWeightHandler = NULL;        
-    
-}// end of constructor
-//------------------------------------------------------------------------------
 
 
 /*

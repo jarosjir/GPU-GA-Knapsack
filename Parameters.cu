@@ -85,7 +85,7 @@ void TParameters::LoadParametersFromCommandLine(int argc, char **argv){
    char c;
 
    // Parse command line 
-   while ((c = getopt (argc, argv, "p:g:m:c:o:i:n:f:s:bh")) != -1){
+   while ((c = getopt (argc, argv, "p:g:m:c:o:f:s:bh")) != -1){
        switch (c){
           case 'p':{              
               if (atoi(optarg) != 0) EvolutionParameters.PopulationSize = atoi(optarg);
@@ -110,16 +110,7 @@ void TParameters::LoadParametersFromCommandLine(int argc, char **argv){
               break;
           }
          
-          
-         case 'i': {
-              if (atoi(optarg) != 0) EvolutionParameters.IslandCount = atoi(optarg);;
-              break;
-          }
-        
-          case 'n': {
-              if (atoi(optarg) != 0) EvolutionParameters.MigrationInterval = atoi(optarg);
-              break;
-          }
+         
           
          case 's': {
               if (atoi(optarg) != 0) EvolutionParameters.StatisticsInterval = atoi(optarg);
@@ -193,9 +184,6 @@ TParameters::TParameters(){
     EvolutionParameters.CrossoverPst        = 0.7f;    
     EvolutionParameters.OffspringPopulationSize = (int) (0.5f * EvolutionParameters.PopulationSize);
     
-    EvolutionParameters.IslandCount         = 1;
-    EvolutionParameters.EmigrantCount       = 0;
-    EvolutionParameters.MigrationInterval   = 0;
     EvolutionParameters.StatisticsInterval  = 1;
     
     EvolutionParameters.IntBlockSize        = sizeof(int)*8;  
@@ -221,9 +209,6 @@ void TParameters::PrintUsageAndExit(){
   cerr << "  -o offspring_rate\n";
   cerr << endl;
   
-  cerr << "  -i island_count\n";
-  cerr << "  -e emigrants_rate\n";
-  cerr << "  -n migration_interval\n";
   cerr << "  -s statistics_interval\n";
   cerr << endl;
   
@@ -241,14 +226,12 @@ void TParameters::PrintUsageAndExit(){
   cerr << "Default offspring_rate = 0.5" << endl;
   cerr << endl;
   
-  cerr << "Default island_count        = 1"   << endl;
-  cerr << "Default emigrants_rate      = 0.1" << endl;
-  cerr << "Default migration_interval  = 0"   << endl;
+
   cerr << "Default statistics_interval = 1"   << endl;
   
   cerr << "Default benchmark_file_name = knapsack_data.txt\n";
   
-  exit(1);
+  exit(EXIT_FAILURE);
     
 }// end of PrintUsage
 //------------------------------------------------------------------------------
@@ -279,9 +262,6 @@ void TParameters::PrintAllParameters(){
     printf("Mutation  int:       %u\n", EvolutionParameters.MutationUINTBoundary);    
     printf("\n");
     
-    printf("Emigrant count:      %d\n", EvolutionParameters.EmigrantCount);
-    printf("Migration interval:  %d\n", EvolutionParameters.MigrationInterval);
-    printf("Island count:        %d\n", EvolutionParameters.IslandCount);    
     printf("Statistics interval: %d\n", EvolutionParameters.StatisticsInterval);
     
     printf("\n");

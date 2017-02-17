@@ -107,9 +107,6 @@ public:
     
     int  OffspringPopulationSize()       const {return EvolutionParameters.OffspringPopulationSize; };
     
-    int  EmigrantCount()        const {return EvolutionParameters.EmigrantCount; };
-    int  MigrationInterval()    const {return EvolutionParameters.MigrationInterval; };
-    int  IslandCount()          const {return EvolutionParameters.IslandCount; };
     int  StatisticsInterval()   const {return EvolutionParameters.StatisticsInterval;};    
         
     int  IntBlockSize()         const {return EvolutionParameters.IntBlockSize;};  

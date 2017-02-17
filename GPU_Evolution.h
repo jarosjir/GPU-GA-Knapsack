@@ -68,10 +68,7 @@ protected:
     
     TGPU_Population* MasterPopulation;          // Master GA population  
     TGPU_Population* OffspringPopulation;       // Population of offsprings
-    
-    TGPU_Population* MigrationPopulation_In;    // Population of Immigrants
-    TGPU_Population* MigrationPopulation_Out;   // Population of Emigrants
-        
+            
     TGPU_Statistics * GPUStatistics;            // Statistics over GA process    
     
     TGlobalKnapsackData GlobalData;             // Global data of knapsack
