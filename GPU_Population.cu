@@ -29,7 +29,7 @@
 
 #include <stdio.h>
 #include <stdexcept>
-#include <cutil_inline.h>
+#include <helper_cuda.h>
 #include <sstream>
 
 #include "GPU_Population.h"
@@ -98,7 +98,7 @@ void TGPU_Population::CopyIn(const TPopulationData * HostSource){
     }
     
     // Copy chromosomes 
-    cutilSafeCall( 
+    checkCudaErrors(
          cudaMemcpy(FHost_Handlers.Population,
                     HostSource->Population, sizeof(TGene) * FHost_Handlers.ChromosomeSize * FHost_Handlers.PopulationSize, 
                     cudaMemcpyHostToDevice)
@@ -106,7 +106,7 @@ void TGPU_Population::CopyIn(const TPopulationData * HostSource){
     
     
     // Copy fitness values
-    cutilSafeCall( 
+    checkCudaErrors(
          cudaMemcpy(FHost_Handlers.Fitness, 
                     HostSource->Fitness, sizeof(TFitness) * FHost_Handlers.PopulationSize, 
                     cudaMemcpyHostToDevice)
@@ -135,7 +135,7 @@ void TGPU_Population::CopyOut (TPopulationData * HostDestination){
     }
     
     // Copy chromosomes --//
-    cutilSafeCall( 
+    checkCudaErrors(
          cudaMemcpy(HostDestination->Population, FHost_Handlers.Population, 
                     sizeof(TGene) * FHost_Handlers.ChromosomeSize * FHost_Handlers.PopulationSize, 
                     cudaMemcpyDeviceToHost)
@@ -143,7 +143,7 @@ void TGPU_Population::CopyOut (TPopulationData * HostDestination){
     
     
     //-- Copy fitnesses --//
-    cutilSafeCall( 
+    checkCudaErrors(
          cudaMemcpy(HostDestination->Fitness, 
                     FHost_Handlers.Fitness, sizeof(TFitness) * FHost_Handlers.PopulationSize, 
                     cudaMemcpyDeviceToHost)
@@ -164,7 +164,7 @@ void TGPU_Population::CopyOut (TPopulationData * HostDestination){
  */
 void TGPU_Population::CopyOutIndividual(TGene * Individual, int Index){
     
-    cutilSafeCall( 
+    checkCudaErrors(
          cudaMemcpy(Individual, &(FHost_Handlers.Population[Index * FHost_Handlers.ChromosomeSize]), 
                     sizeof(TGene) * FHost_Handlers.ChromosomeSize, cudaMemcpyDeviceToHost)
          );    
@@ -193,14 +193,14 @@ void TGPU_Population::CopyDeviceIn(const TGPU_Population * GPUPopulation){
     }
     
     // Copy chromosomes 
-    cutilSafeCall( 
+    checkCudaErrors(
          cudaMemcpy(FHost_Handlers.Population, GPUPopulation->FHost_Handlers.Population, sizeof(TGene) * FHost_Handlers.ChromosomeSize * FHost_Handlers.PopulationSize, 
                     cudaMemcpyDeviceToDevice)
          );    
     
     
     // Copy fintess values
-    cutilSafeCall( 
+    checkCudaErrors(
          cudaMemcpy(FHost_Handlers.Fitness, GPUPopulation->FHost_Handlers.Fitness, sizeof(TFitness) * FHost_Handlers.PopulationSize, 
                     cudaMemcpyDeviceToDevice)
          );    
@@ -222,24 +222,24 @@ void TGPU_Population::AllocateCudaMemory(){
     
     
     // Allocate data structure
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaMalloc((void**)&DeviceData,  sizeof(TPopulationData))
            );		
     
     
     // Allocate Population data
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaMalloc((void**)&(FHost_Handlers.Population),  sizeof(TGene) * FHost_Handlers.ChromosomeSize * FHost_Handlers.PopulationSize)
            );		
     
     // Allocate Fitness data
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaMalloc((void**)&(FHost_Handlers.Fitness),  sizeof(TFitness) * FHost_Handlers.PopulationSize)
            );		
     
     
     // Copy structure to GPU 
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaMemcpy(DeviceData, &FHost_Handlers, sizeof(TPopulationData),cudaMemcpyHostToDevice )
            );		
     
@@ -254,18 +254,18 @@ void TGPU_Population::FreeCudaMemory(){
        
     
     // Free population data
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaFree(FHost_Handlers.Population)
            );  
      
     //Free Fitness data
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaFree(FHost_Handlers.Fitness) 
            );  
      
     
     // Free whole structure 
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaFree(DeviceData)
            );  
     
@@ -353,12 +353,12 @@ string TCPU_Population::GetStringOfChromosome(const int Idx){
 void TCPU_Population::AllocateCudaMemory(){
     
     // Allocate Population on the host side
-    cutilSafeCall( 
+    checkCudaErrors(
             cudaHostAlloc((void**)&HostData->Population,  sizeof(TGene) * HostData->ChromosomeSize * HostData->PopulationSize,cudaHostAllocDefault )
             );		
 
     // Allocate fitness on the host side
-    cutilSafeCall( 
+    checkCudaErrors(
             cudaHostAlloc((void**)&HostData->Fitness,  sizeof(TFitness) *  HostData->PopulationSize,cudaHostAllocDefault )
             );		
     
@@ -372,12 +372,12 @@ void TCPU_Population::AllocateCudaMemory(){
 void TCPU_Population::FreeCudaMemory(){
     
     // Free population on the host side
-    cutilSafeCall( 
+    checkCudaErrors(
             cudaFreeHost(HostData->Population)
             );
     
     // Free fitness on the host side
-    cutilSafeCall( 
+    checkCudaErrors(
             cudaFreeHost(HostData->Fitness)
             );            
     

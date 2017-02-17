@@ -29,9 +29,8 @@
 
 #include <iostream>
 
-#include <cutil_inline.h>
+#include <helper_cuda.h>
 #include <cuda_runtime.h>
-#include <cutil.h>
 
 #include "Parameters.h"
 
@@ -163,8 +162,8 @@ void TParameters::LoadParametersFromCommandLine(int argc, char **argv){
  */
 void TParameters::StoreParamsOnGPU(){
             
-    cutilSafeCall( 
-        cudaMemcpyToSymbol("GPU_EvolutionParameters", &EvolutionParameters, sizeof(TEvolutionParameters) )
+    checkCudaErrors(
+        cudaMemcpyToSymbol(GPU_EvolutionParameters, &EvolutionParameters, sizeof(TEvolutionParameters) )
     );
     
    

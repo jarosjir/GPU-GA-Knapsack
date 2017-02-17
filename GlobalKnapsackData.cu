@@ -26,7 +26,7 @@
  * Created on 30 March 2012, 00:00 PM
  */
 
-#include <cutil_inline.h>
+#include <helper_cuda.h>
 #include <fstream>
 #include <iostream>
 
@@ -167,15 +167,15 @@ void TGlobalKnapsackData::AllocateMemory(int NumberOfItems){
     
     //------------------------- Host allocation ------------------------------//    
     //------------------- All data allocated by PINNED memory ----------------//
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaHostAlloc((void**)&HostData,  sizeof(TKnapsackData), cudaHostAllocDefault)
            );		
     
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaHostAlloc((void**)&HostData->ItemPrice,  sizeof(TPriceType) * NumberOfItems, cudaHostAllocDefault)
            );		
     
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaHostAlloc((void**)&HostData->ItemWeight,  sizeof(TWeightType)* NumberOfItems, cudaHostAllocDefault)
            );		
     
@@ -183,15 +183,15 @@ void TGlobalKnapsackData::AllocateMemory(int NumberOfItems){
     
     
     //----------------------- Device allocation ------------------------------//    
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaMalloc((void**)&(DeviceData),  sizeof(TKnapsackData) )
            );		
             
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaMalloc((void**)&(FDeviceItemPriceHandler),  sizeof(TPriceType) * NumberOfItems)
            );		
         
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaMalloc((void**)&(FDeviceItemWeightHandler),  sizeof(TWeightType) * NumberOfItems)
            );		
             
@@ -206,15 +206,15 @@ void TGlobalKnapsackData::AllocateMemory(int NumberOfItems){
 void TGlobalKnapsackData::FreeMemory(){
     
     //------------------------- Host allocation ------------------------------//        
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaFreeHost(HostData->ItemPrice)
            );		
     
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaFreeHost(HostData->ItemWeight)            
            );		
     
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaFreeHost(HostData)
            );		
     
@@ -222,14 +222,14 @@ void TGlobalKnapsackData::FreeMemory(){
     
     
     //----------------------- Device allocation ------------------------------//    
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaFree(DeviceData)
            );		
         
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaFree(FDeviceItemPriceHandler)
            );		        
-    cutilSafeCall( 
+    checkCudaErrors(
            cudaFree(FDeviceItemWeightHandler)
            );		        
     
@@ -245,21 +245,21 @@ void TGlobalKnapsackData::UploadDataToDevice(){
     
     
     // Copy basic structure - struct data
-    cutilSafeCall( 
+    checkCudaErrors(
          cudaMemcpy(DeviceData, HostData, sizeof(TKnapsackData), 
                     cudaMemcpyHostToDevice)
          );    
         
     
     // Set pointer of the ItemPrice vector into the struct on GPU (link struct and vector)
-    cutilSafeCall( 
+    checkCudaErrors(
          cudaMemcpy(&(DeviceData->ItemPrice), &FDeviceItemPriceHandler, sizeof(TPriceType * ), 
                     cudaMemcpyHostToDevice)
          );    
     
 
     // Set pointer of the ItemWeight vector into struct on GPU (link struct and vector)
-    cutilSafeCall( 
+    checkCudaErrors(
          cudaMemcpy(&(DeviceData->ItemWeight), &FDeviceItemWeightHandler, sizeof(TWeightType * ), 
                     cudaMemcpyHostToDevice)
          );    
@@ -267,13 +267,13 @@ void TGlobalKnapsackData::UploadDataToDevice(){
     
         
     // Copy prices 
-    cutilSafeCall( 
+    checkCudaErrors(
          cudaMemcpy(FDeviceItemPriceHandler, HostData->ItemPrice,  sizeof(TPriceType) * HostData->NumberOfItems, 
                     cudaMemcpyHostToDevice)
          );    
     
     // Copy weights 
-    cutilSafeCall( 
+    checkCudaErrors(
          cudaMemcpy(FDeviceItemWeightHandler, HostData->ItemWeight, sizeof(TWeightType) * HostData->NumberOfItems, 
                     cudaMemcpyHostToDevice)
          );    
