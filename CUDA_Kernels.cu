@@ -23,8 +23,8 @@
  *      
  *
  * 
- * Created on 30 March 2012, 00:00 PM
- * Modified on 21 September 2021, 23:30
+ * Created on 30 March 2012, 00:00
+ * Modified on 21 September 2021, 23:49
  */
 
 
@@ -48,6 +48,39 @@ extern __constant__  TEvolutionParameters GPU_EvolutionParameters;
 
 
 using namespace r123;
+
+/// Semaphore
+class Semaphore
+{
+  public:
+    /// Default constructor
+    Semaphore() = default;
+    /// Default destructor
+    ~Semaphore() = default;
+
+    /// acquire semaphore
+    __device__ void acquire()
+    {
+      while (atomicCAS((int *)&mutex, 0, 1) != 0);        
+      __threadfence();
+    }
+
+    /// release semaphore
+    __device__ void release()
+    {
+      mutex = 0;     
+      __threadfence();
+    }
+
+  private:
+    /// mutex for the semaphore
+    volatile int mutex = 0;
+};
+
+
+/// Global semaphore variable
+__device__ Semaphore sempahore;
+
 
 
 typedef r123::Philox2x32 RNG_2x32;
@@ -87,70 +120,8 @@ __device__ void HalfWarpReduceGene  (volatile TGene* sdata, int tid);
 
 
 //----------------------------------------------------------------------------//
-//                              GPU Lock implementation                         //
+//                              GPU Semaphore implementation                  //
 //----------------------------------------------------------------------------//
-
-
-/*
- * Create a log 
- */
-TGPU_Lock::TGPU_Lock() : mutex(NULL), reference_counter(0){
-
-    int state = 0;
-    cudaMalloc(&mutex, sizeof(int));
-    CheckAndReportCudaError(__FILE__,__LINE__);
-
-    reference_counter++;
-
-    cudaMemcpy(mutex, &state, sizeof(int), cudaMemcpyHostToDevice);
-    CheckAndReportCudaError(__FILE__,__LINE__);
-}// end of TGPU_Lock
-
-/*
- * Copy constructor
- */
-TGPU_Lock::TGPU_Lock(const TGPU_Lock& orig): mutex(orig.mutex), reference_counter(orig.reference_counter + 1)
-{
-}// end of TGPU_Lock
-
-
-//------------------------------------------------------------------------------
-
-/*
- * Destructor of the lock
- */
-TGPU_Lock::~TGPU_Lock(){
-    reference_counter--;
-    if (reference_counter == 0)
-    {
-      cudaFree(mutex);     
-      CheckAndReportCudaError(__FILE__,__LINE__);
-    }
-}// end of ~TGPU_Lock
-//------------------------------------------------------------------------------
-
-/*
- * Lock the lock
- * 
- */
-__device__ void TGPU_Lock::Lock(void){
-
-    while (atomicCAS(mutex, 0, 1) != 0 );
-    
-}// end of Lock
-//------------------------------------------------------------------------------
-
-
-/*
- * Unlock the lock
- * 
- */
-__device__ void TGPU_Lock::Unlock( void ){
-    
-   atomicExch(mutex, 0);
-       
-}// end of Unlock
-//------------------------------------------------------------------------------
 
 
 
@@ -545,10 +516,9 @@ __global__ void ReplacementKernel(TPopulationData * ParentsData, TPopulationData
  * 
  * @param StatisticsData
  * @param PopopulationData
- * @param GPULock
  * 
  */
-__global__ void CalculateStatistics(TStatisticsData * StatisticsData, TPopulationData * PopData, TGPU_Lock GPULock){
+__global__ void CalculateStatistics(TStatisticsData * StatisticsData, TPopulationData * PopData){
     
   int i      = threadIdx.x + blockDim.x*blockIdx.x;
   int stride = blockDim.x*gridDim.x;
@@ -618,7 +588,7 @@ __global__ void CalculateStatistics(TStatisticsData * StatisticsData, TPopulatio
   
   //-- Write to Global Memory --//  
   if (threadIdx.x == 0){
-      GPULock.Lock();
+      sempahore.acquire();
       
       if (StatisticsData->MaxFitness < shared_Max[threadIdx.x]){
                StatisticsData->MaxFitness = shared_Max    [threadIdx.x];
@@ -629,7 +599,8 @@ __global__ void CalculateStatistics(TStatisticsData * StatisticsData, TPopulatio
                StatisticsData->MinFitness = shared_Min[threadIdx.x];               
       }                
 
-      GPULock.Unlock();        
+      sempahore.release();
+      
     
     atomicAdd(&(StatisticsData->AvgFitness), shared_Sum [threadIdx.x]);
     atomicAdd(&(StatisticsData->Divergence), shared_Sum2[threadIdx.x]);

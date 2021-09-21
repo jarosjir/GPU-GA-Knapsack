@@ -23,7 +23,8 @@
  *      
  *
  * 
- * Created on 24 March 2012, 00:00 PM
+ * Created on 24 March 2012, 00:00
+ * Modified on 21 September 2021, 23:49
  */
 
 #include <helper_cuda.h>
@@ -78,16 +79,14 @@ TGPU_Statistics::~TGPU_Statistics(){
  */    
 void TGPU_Statistics::Calculate(TGPU_Population * Population, bool PrintBest){
     
-    // Create a binary MUTEX (memory lock)
-    TGPU_Lock GPU_Lock;   
-    
+        
     // Init statistics struct on GPU
     InitStatistics();
     
     //  Run a kernel to collect statistic data       
     CalculateStatistics
             <<<TParameters::GetInstance()->GetGPU_SM_Count()*2, BLOCK_SIZE >>>
-            (DeviceData, Population->DeviceData, GPU_Lock);
+            (DeviceData, Population->DeviceData);
     CheckAndReportCudaError(__FILE__,__LINE__);
     
     // Copy statistics down to host

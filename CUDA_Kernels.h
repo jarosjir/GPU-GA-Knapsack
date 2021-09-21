@@ -24,6 +24,7 @@
  *
  * 
  * Created on 30 March 2012, 00:00 PM
+ * Modified on 21 September 2021, 23:49
  */
 
 
@@ -37,26 +38,6 @@
 #include "GlobalKnapsackData.h"
 
 
-/*
- * GPU mutex (binary lock)
- */
-class TGPU_Lock
-{
-public:
-    int * mutex;
-
-    TGPU_Lock();
-    TGPU_Lock(const TGPU_Lock& orig);
-    ~TGPU_Lock();   
-
-    __device__ void Lock();
-    __device__ void Unlock();
-
-private:
-    long reference_counter; /// MUST be becacuse I can't pass a class by pointer or by reference  
-  
-};// end of TGPU_Lock
-//------------------------------------------------------------------------------
 
 /// Check and report CUDA errors
 void CheckAndReportCudaError(const char * SourceFileName, const int SourceLineNumber);
@@ -80,8 +61,7 @@ __global__ void ReplacementKernel(TPopulationData * ParentsData,
 
 // Calculate statistics
 __global__ void CalculateStatistics(TStatisticsData * StatisticsData, 
-                                    TPopulationData * PopData, 
-                                    TGPU_Lock Lock);
+                                    TPopulationData * PopData);
 
 
 

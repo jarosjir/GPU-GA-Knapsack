@@ -45,7 +45,7 @@ CUDA_ARCH = --generate-code arch=compute_50,code=sm_50 \
             --generate-code arch=compute_86,code=sm_86
 
 
-CXXFLAGS= -Xptxas=-v -m64 -O3  --device-c ${CUDA_ARCH}
+CXXFLAGS= -std=c++17 -Xptxas=-v -m64 -O3  --device-c ${CUDA_ARCH}
 TARGET=gpu_knapsack
 LDFLAGS=
 
