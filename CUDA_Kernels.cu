@@ -24,7 +24,7 @@
  *
  * 
  * Created on 30 March 2012, 00:00 PM
- * Modified on 17 February 2017, 15:58
+ * Modified on 21 September 2021, 23:30
  */
 
 
@@ -134,7 +134,7 @@ TGPU_Lock::~TGPU_Lock(){
  * 
  */
 __device__ void TGPU_Lock::Lock(void){
-    
+
     while (atomicCAS(mutex, 0, 1) != 0 );
     
 }// end of Lock
@@ -628,14 +628,12 @@ __global__ void CalculateStatistics(TStatisticsData * StatisticsData, TPopulatio
       if (StatisticsData->MinFitness > shared_Min[threadIdx.x]){
                StatisticsData->MinFitness = shared_Min[threadIdx.x];               
       }                
-      
-      StatisticsData->AvgFitness += shared_Sum [threadIdx.x];
-      StatisticsData->Divergence += shared_Sum2[threadIdx.x];
-              
+
       GPULock.Unlock();        
-              
-  }
     
+    atomicAdd(&(StatisticsData->AvgFitness), shared_Sum [threadIdx.x]);
+    atomicAdd(&(StatisticsData->Divergence), shared_Sum2[threadIdx.x]);
+  }
 }// end of CalculateStatistics
 //------------------------------------------------------------------------------
 
