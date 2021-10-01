@@ -1,156 +1,185 @@
-/* 
- * File:        Parameters.h
- * Author:      Jiri Jaros
- * Affiliation: Brno University of Technology
+/**
+ * @file        Parameters.h
+ * @author      Jiri Jaros
+ *              Brno University of Technology
  *              Faculty of Information Technology
- *              
+ *
  *              and
- * 
+ *
  *              The Australian National University
  *              ANU College of Engineering & Computer Science
  *
- * Email:       jarosjir@fit.vutbr.cz
- * Web:         www.fit.vutbr.cz/~jarosjir
- * 
- * Comments:    Header file of the parameter class. 
+ *              jarosjir@fit.vutbr.cz
+ *              www.fit.vutbr.cz/~jarosjir
+ *
+ * @brief       Header file of the parameter class.
  *              This class maintains all the parameters of evolution.
  *
- * 
- * License:     This source code is distribute under OpenSouce GNU GPL license
- *                
- *              If using this code, please consider citation of related papers
- *              at http://www.fit.vutbr.cz/~jarosjir/pubs.php        
- *      
+ * @date        30 March     2012, 00:00 (created)
+ *              22 September 2021, 19:59 (revised)
  *
- * 
- * Created on 30 March 2012, 00:00 PM
- * Modified on 17 February 2017: 19:59
+ * @copyright   Copyright (C) 2012 - 2021 Jiri Jaros.
+ *
+ * This source code is distribute under OpenSouce GNU GPL license.
+ * If using this code, please consider citation of related papers
+ * at http://www.fit.vutbr.cz/~jarosjir/pubs.php
+ *
  */
 
-
-#ifndef TPARAMETERS_H
-#define	TPARAMETERS_H
+#ifndef PARAMETERS_H
+#define	PARAMETERS_H
 
 #include <string>
+//--------------------------------------------------------------------------------------------------------------------//
+//------------------------------------------------- CUDA constants ---------------------------------------------------//
+//--------------------------------------------------------------------------------------------------------------------//
 
-using namespace std;
+/// Number of threads per block
+constexpr int BLOCK_SIZE = 256;
+/// Warp size
+constexpr int WARP_SIZE  = 32;
+/// Number of chromosomes per block
+constexpr int CHR_PER_BLOCK = (BLOCK_SIZE / WARP_SIZE);
 
-//----------------------------------------------------------------------------//
-//------------------------- CUDA constants -----------------------------------//
-//----------------------------------------------------------------------------//
+//--------------------------------------------------------------------------------------------------------------------//
+//---------------------------------------------- Parameter definition ------------------------------------------------//
+//--------------------------------------------------------------------------------------------------------------------//
 
-#define BLOCK_SIZE (256)
-#define WARP_SIZE  (32)
-#define CHR_PER_BLOCK (BLOCK_SIZE/WARP_SIZE)
-
-
-/*
- * Evolution Parameters structure
+/**
+ * @struct EvolutionParameters
+ * @brief  Parameters of the evolutionary process.
  */
-struct TEvolutionParameters{
-    int PopulationSize;                 // Population size
-    int OffspringPopulationSize;        // Offspring population size
-    int ChromosomeSize;                 // Length of binary chromosome in int chunks
-    int NumOfGenerations;               // Total number of generations to evolve
-        
-    float CrossoverPst;                 // Crossover rate (as flaot)
-    float MutationPst;                  // Mutaion rate   (as float      
-    unsigned int CrossoverUINTBoundary; // Crossover rate as uint 
-    unsigned int MutationUINTBoundary;  // Mutation rate as uint 
-    
-    int EmigrantCount;                  // Number of migrating individuals
-    int MigrationInterval;              // Number of CPU threads
-    int IslandCount;                    // Number of independent islands
-    int StatisticsInterval;             // How often to print statistics
-    
-    int IntBlockSize;                   // size of int block (32 bin genes)
-};// end of TEvolutionParameters
-//------------------------------------------------------------------------------
+struct EvolutionParameters
+{
+  /// Population size - number of chromosomes in the population.
+  int populationSize;
+  /// Offspring population size - number of newly generated chromosomes.
+  int offspringPopulationSize;
+
+  /// Length of binary chromosome in integer granularity (32b).
+  int chromosomeSize;
+  /// Total number of generations to evolve.
+  int numOfGenerations;
+
+  /// Crossover probability per individual (float number).
+  float crossoverPst;
+  /// Mutation probability per gene (float number).
+  float mutationPst;
+  /// Crossover rate converted to int for faster comparison and random number generation.
+  unsigned int crossoverUintBoundary;
+  /// Mutation rate converted to int for faster comparison and random number generation.
+  unsigned int mutationUintBoundary;
+
+  /// Number of migrating individuals between islands.
+  int emigrantCount;
+  /// Migration interval (how often to migrate).
+  int migrationInterval;
+  /// Number of independent islands.
+  int islandCount;
+  /// How often to print statistics
+  int statisticsInterval;
+
+  /// size of int block (32 bin genes)
+  int intBlockSize;
+};// end of EvolutionParameters
+//----------------------------------------------------------------------------------------------------------------------
 
 
 
 
-/*
- * Singleton class with Parameters maitaining them in CPU and GPU constant memory
+/**
+ * @class Parameters
+ * @brief Singleton class with Parameters maintaining them in CPU and GPU constant memory.
  */
-class TParameters {
-public:
-    
-    // Get instance of the singleton class
-    static TParameters* GetInstance();
-    
-    // Destructor
-    virtual ~TParameters() {
-        pTParametersInstanceFlag = false;
-    };
-    
-    // Parse command line and populate the class
-    void LoadParametersFromCommandLine(int argc, char **argv);
-       
-    // Store GA paremetrs in GPU cosntant memory
-    void StoreParamsOnGPU();
-    
-    
-    
-    // Return values of basic parameters
-    int   PopulationSize()        const {return EvolutionParameters.PopulationSize; };
-    int   ChromosomeSize()        const {return EvolutionParameters.ChromosomeSize; };
-    void  SetChromosomeSize(unsigned int Value) { EvolutionParameters.ChromosomeSize = Value; };
-    
-    int   NumOfGenerations()      const {return EvolutionParameters.NumOfGenerations; };
-    
-    
-    float        CrossoverPst()          const {return EvolutionParameters.CrossoverPst; };
-    float        MutationPst()           const {return EvolutionParameters.MutationPst; };
-    unsigned int CrossoverUINTBoundary() const {return EvolutionParameters.CrossoverUINTBoundary; };    
-    unsigned int MutationUINTBoundary()  const {return EvolutionParameters.MutationUINTBoundary; };
-    
-    int  OffspringPopulationSize()       const {return EvolutionParameters.OffspringPopulationSize; };
-    
-    int  StatisticsInterval()   const {return EvolutionParameters.StatisticsInterval;};    
-        
-    int  IntBlockSize()         const {return EvolutionParameters.IntBlockSize;};  
-    
-    
-    // Get filename with global data
-    string BenchmarkFileName()          const {return GlobalDataFileName;};
-    
-    // Get number of SM processors on the GPU
-    int  GetGPU_SM_Count()              const {return FGPU_SM_Count;};
-    // Set number of SM processors on the GPU
-    void SetGPU_SM_Count(int SM_Count) {FGPU_SM_Count = SM_Count;};
-    
-    // Print best solution?
-    bool GetPrintBest()                 const {return FPrintBest;};
-    
-    // print parameters to stdout
-    void PrintAllParameters();
-    
-private:        
-    TEvolutionParameters EvolutionParameters;   
-    string GlobalDataFileName;
-        
-    
-    static bool pTParametersInstanceFlag;
-    static TParameters *pTParametersSingle;
-    
-    int  FGPU_SM_Count;
-    bool FPrintBest;      
-    
-    // print error message end exit if parameters are wrong
-    void PrintUsageAndExit();
-    
-    TParameters();
+class Parameters
+{
+  public:
+    /// Get instance of the singleton class
+    static Parameters& GetInstance();
 
     //Prevent copy-construction
-    TParameters(const TParameters&);
+    Parameters(const Parameters&) = delete;
 
     //Prevent assignment
-    TParameters& operator=(const TParameters&);
-    
-};// end of TParameters
-//------------------------------------------------------------------------------
+    Parameters& operator=(const Parameters&) = delete;
+
+    /// Destructor
+    virtual ~Parameters() { sInstanceFlag = false;};
+
+    /**
+     * Load parameters from the commandline.
+     * @param [in] argc
+     * @param [in] argv
+     */
+    void parseCommandline(int    argc,
+                          char** argv);
+
+    /// Store GA parameters in GPU constant memory.
+    void copyToDevice();
+
+    //--------------------------------------------------- Getters ----------------------------------------------------//
+
+    /// Get number of chromosomes in the population
+    int   getPopulationSize()               const { return mEvolutionParameters.populationSize; };
+    /// Get size of the chromosome (including padding)
+    int   getChromosomeSize()               const { return mEvolutionParameters.chromosomeSize; };
+    /// Set size of the chromosome
+    void  setChromosomeSize(unsigned int Value)   { mEvolutionParameters.chromosomeSize = Value; };
+    /// Get number of generations to evolve
+    int   getNumOfGenerations()             const { return mEvolutionParameters.numOfGenerations; };
+
+    /// Get crossover probability for two individuals.
+    float        getCrossoverPst()          const { return mEvolutionParameters.crossoverPst; };
+    /// Get per gene mutation probability.
+    float        getMutationPst()           const { return mEvolutionParameters.mutationPst; };
+    /// Get crossover probability in scaled to uint.
+    unsigned int getCrossoverUintBoundary() const { return mEvolutionParameters.crossoverUintBoundary; };
+    /// Get mutation probability in scaled to uint.
+    unsigned int getMutationUintBoundary()  const { return mEvolutionParameters.mutationUintBoundary; };
+    /// Get number of newly generated chromosomes.
+    int  getOffspringPopulationSize()       const { return mEvolutionParameters.offspringPopulationSize; };
+    /// Get how often to print statistics.
+    int  getStatisticsInterval()            const { return mEvolutionParameters.statisticsInterval; };
+    /// Get the integer block size
+    int  getIntBlockSize()                  const { return mEvolutionParameters.intBlockSize; };
+
+    /// Get filename with global data.
+    std::string getBenchmarkFileName()      const { return mGlobalDataFileName; };
+
+    /// Get number of SM processors on the GPU.
+    int  getNumberOfDeviceSMs()              const { return mNumberOFDeviceSM; };
+    /// Set number of SM processors on the GPU
+    void setNumberOfDeviceSMs(int SM_Count)        { mNumberOFDeviceSM = SM_Count; };
+
+    /// Print best solution?
+    bool getPrintBest()                      const { return mPrintBest; };
+
+    /// Print out parameters to stdout.
+    void printOutAllParameters();
+
+  private:
+    /// Singleton constructor
+    Parameters();
+
+    /// print error message end exit if parameters are wrong
+    void printUsageAndExit();
 
 
-#endif	/* TPARAMETERS_H */
+    /// Structure with evolutionary parameters (host copy).
+    EvolutionParameters mEvolutionParameters;
+    /// Name of the file with global knapsack data
+    std::string         mGlobalDataFileName;
 
+    /// Number of SM processors on the device
+    int  mNumberOFDeviceSM;
+    /// Shall we print the best solution?
+    bool mPrintBest;
+
+    /// Singleton static flag.
+    static bool sInstanceFlag;
+    /// Singleton static instance
+    static Parameters* sSingletonInstance;
+};// end of Parameters
+//----------------------------------------------------------------------------------------------------------------------
+
+#endif	/* PARAMETERS_H */

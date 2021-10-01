@@ -1,34 +1,31 @@
-/* 
- * File:        Parameters.cu
- * Author:      Jiri Jaros
- * Affiliation: Brno University of Technology
+/**
+ * @file        Parameters.cu
+ * @author      Jiri Jaros
+ *              Brno University of Technology
  *              Faculty of Information Technology
- *              
+ *
  *              and
- * 
+ *
  *              The Australian National University
  *              ANU College of Engineering & Computer Science
  *
- * Email:       jarosjir@fit.vutbr.cz
- * Web:         www.fit.vutbr.cz/~jarosjir
- * 
- * Comments:    Implementation file of the parameter class. 
+ *              jarosjir@fit.vutbr.cz
+ *              www.fit.vutbr.cz/~jarosjir
+ *
+ * @brief       Implementation file of the parameter class.
  *              This class maintains all the parameters of evolution.
  *
- * 
- * License:     This source code is distribute under OpenSouce GNU GPL license
- *                
- *              If using this code, please consider citation of related papers
- *              at http://www.fit.vutbr.cz/~jarosjir/pubs.php        
- *      
+ * @date        30 March     2012, 00:00 (created)
+ *              22 September 2021: 18:59
  *
- * 
- * Created on 30 March 2012, 00:00 PM
- * Modified on 17 February 2017, 15:59
+ * @copyright   Copyright (C) 2012 - 2021 Jiri Jaros.
+ *
+ * This source code is distribute under OpenSouce GNU GPL license.
+ * If using this code, please consider citation of related papers
+ * at http://www.fit.vutbr.cz/~jarosjir/pubs.php
+ *
  */
 
-
-#include <iostream>
 #include <getopt.h>
 
 #include <helper_cuda.h>
@@ -36,238 +33,258 @@
 
 #include "Parameters.h"
 
-//----------------------------------------------------------------------------//
-//                              Definitions                                   //
-//----------------------------------------------------------------------------//
-
-__constant__  TEvolutionParameters GPU_EvolutionParameters;
 
 
-// Singleton initialization 
-bool TParameters::pTParametersInstanceFlag = false;
-TParameters* TParameters::pTParametersSingle = NULL;
+//--------------------------------------------------------------------------------------------------------------------//
+//--------------------------------------------------- Definitions ----------------------------------------------------//
+//--------------------------------------------------------------------------------------------------------------------//
+
+/// Copy of Evolutionary parameters in device constant memory.
+__constant__  EvolutionParameters gpuEvolutionParameters;
 
 
-//----------------------------------------------------------------------------//
-//                              Implementation                                //
-//                              public methods                                //
-//----------------------------------------------------------------------------//
+// Singleton initialization
+bool Parameters::sInstanceFlag = false;
+Parameters* Parameters::sSingletonInstance = nullptr;
 
-/*
- * Get instance of TPrarams
+
+//--------------------------------------------------------------------------------------------------------------------//
+//------------------------------------------------- Public methods ---------------------------------------------------//
+//--------------------------------------------------------------------------------------------------------------------//
+
+/**
+ * Get instance of Parameters
  */
-TParameters* TParameters::GetInstance(){
-    if(! pTParametersInstanceFlag)
-    {        
-        pTParametersSingle = new TParameters();
-        pTParametersInstanceFlag = true;
-        return pTParametersSingle;
-    }
-    else
-    {
-        return pTParametersSingle;
-    }
-}// end of TParameters::GetInstance
-//-----------------------------------------------------------------------------
+Parameters& Parameters::GetInstance()
+{
+  if(!sInstanceFlag)
+  {
+    sSingletonInstance = new Parameters();
+    sInstanceFlag = true;
+    return *sSingletonInstance;
+  }
+  else
+  {
+    return *sSingletonInstance;
+  }
+}// end of Parameters::GetInstance
+//----------------------------------------------------------------------------------------------------------------------
 
-
-/*
+/**
  * Load parameters from command line
- * 
- * @param argc
- * @param argv
- * 
  */
-void TParameters::LoadParametersFromCommandLine(int argc, char **argv){
-    
-   // default values
-   float OffspringPercentage = 0.5f;
-   char c;
+void Parameters::parseCommandline(int    argc,
+                                  char** argv)
+{
+  // Default values
+  float offspringPercentage = 0.5f;
+  char c;
 
-   // Parse command line 
-   while ((c = getopt (argc, argv, "p:g:m:c:o:f:s:bh")) != -1){
-       switch (c){
-          case 'p':{              
-              if (atoi(optarg) != 0) EvolutionParameters.PopulationSize = atoi(optarg);
-              break;
-          }
-          case 'g': {
-              if (atoi(optarg) != 0) EvolutionParameters.NumOfGenerations = atoi(optarg);
-              break;
-          }
-  
-          
-          case 'm': {
-              if (atof(optarg) != 0) EvolutionParameters.MutationPst = atof(optarg);              
-              break;
-          }
-          case 'c': {
-              if (atof(optarg) != 0) EvolutionParameters.CrossoverPst = atof(optarg);
-              break;
-          }
-          case 'o': {
-              if (atof(optarg) != 0) OffspringPercentage = atof(optarg);;
-              break;
-          }
-         
-         
-          
-         case 's': {
-              if (atoi(optarg) != 0) EvolutionParameters.StatisticsInterval = atoi(optarg);
-              break;
-          }
+  // Parse command line
+  while ((c = getopt (argc, argv, "p:g:m:c:o:f:s:bh")) != -1)
+  {
+    switch (c)
+    {
+      case 'p':
+      {
+        if (atoi(optarg) != 0)
+        {
+          mEvolutionParameters.populationSize = atoi(optarg);
+        }
+        break;
+      }
+      case 'g':
+      {
+        if (atoi(optarg) != 0)
+        {
+          mEvolutionParameters.numOfGenerations = atoi(optarg);
+        }
+        break;
+      }
 
-         case 'b': {
-              FPrintBest = true;
-              break;
-          }
-          
-         case 'f': {
-              GlobalDataFileName  = optarg;
-              break;
-          }
-          case 'h':{
+      case 'm':
+      {
+        if (atof(optarg) != 0)
+        {
+          mEvolutionParameters.mutationPst = atof(optarg);
+        }
+        break;
+      }
 
-             PrintUsageAndExit();
-             break;        
-          }
-          default:{
+      case 'c':
+      {
+        if (atof(optarg) != 0)
+        {
+          mEvolutionParameters.crossoverPst = atof(optarg);
+        }
+        break;
+      }
+      case 'o':
+      {
+        if (atof(optarg) != 0)
+        {
+          offspringPercentage = atof(optarg);;
+        }
+        break;
+      }
 
-               PrintUsageAndExit();
-          }
-       }    
-   }   
-   
+      case 's':
+      {
+        if (atoi(optarg) != 0)
+        {
+          mEvolutionParameters.statisticsInterval = atoi(optarg);
+        }
+        break;
+      }
+
+      case 'b':
+      {
+        mPrintBest = true;
+        break;
+      }
+
+      case 'f':
+      {
+        mGlobalDataFileName  = optarg;
+        break;
+      }
+      case 'h':
+      {
+        printUsageAndExit();
+        break;
+      }
+
+      default:
+      {
+        printUsageAndExit();
+      }
+     }
+   }// switch
+
    // Set population size to be even.
-   EvolutionParameters.OffspringPopulationSize = (int) (OffspringPercentage * EvolutionParameters.PopulationSize);
-   if (EvolutionParameters.OffspringPopulationSize == 0) EvolutionParameters.OffspringPopulationSize = 2;
-   if (EvolutionParameters.OffspringPopulationSize % 2 == 1) EvolutionParameters.OffspringPopulationSize++;
-   
-      
-   // Set UINT mutation threshold to faster comparison
-   EvolutionParameters.MutationUINTBoundary  = (unsigned int) ((float) UINT_MAX * EvolutionParameters.MutationPst);
-   EvolutionParameters.CrossoverUINTBoundary = (unsigned int) ((float) UINT_MAX * EvolutionParameters.CrossoverPst);
-   
-} // end of LoadParametersFromCommandLine
-//------------------------------------------------------------------------------
+   mEvolutionParameters.offspringPopulationSize = int(offspringPercentage * mEvolutionParameters.populationSize);
+   if (mEvolutionParameters.offspringPopulationSize == 0)
+   {
+     mEvolutionParameters.offspringPopulationSize = 2;
+   }
+   if (mEvolutionParameters.offspringPopulationSize % 2 == 1)
+   {
+     mEvolutionParameters.offspringPopulationSize++;
+   }
 
 
-/*
+  // Set UINT mutation threshold to faster comparison
+  mEvolutionParameters.mutationUintBoundary  = (unsigned int) ((float) UINT_MAX * mEvolutionParameters.mutationPst);
+  mEvolutionParameters.crossoverUintBoundary = (unsigned int) ((float) UINT_MAX * mEvolutionParameters.crossoverPst);
+
+} // end of parseCommandline
+//----------------------------------------------------------------------------------------------------------------------
+
+/**
  * Copy parameters to the GPU constant memory
  */
-void TParameters::StoreParamsOnGPU(){
-            
-    checkCudaErrors(
-        cudaMemcpyToSymbol(GPU_EvolutionParameters, &EvolutionParameters, sizeof(TEvolutionParameters) )
-    );
-    
-   
-}// end of StoreParamsOnGPU
-//------------------------------------------------------------------------------
+void Parameters::copyToDevice()
+{
+  checkCudaErrors(cudaMemcpyToSymbol(gpuEvolutionParameters, &mEvolutionParameters, sizeof(mEvolutionParameters)));
+
+}// end of copyToDevice
+//----------------------------------------------------------------------------------------------------------------------
 
 
-//----------------------------------------------------------------------------//
-//                              Implementation                                //
-//                              private methods                               //
-//----------------------------------------------------------------------------//
+//--------------------------------------------------------------------------------------------------------------------//
+//------------------------------------------------ Private methods ---------------------------------------------------//
+//--------------------------------------------------------------------------------------------------------------------//
 
-/*
+/**
  * Constructor
  */
-TParameters::TParameters(){
-    
-    EvolutionParameters.PopulationSize      = 128;
-    EvolutionParameters.ChromosomeSize      = 32;
-    EvolutionParameters.NumOfGenerations    = 100;
-        
-    EvolutionParameters.MutationPst         = 0.01f;
-    EvolutionParameters.CrossoverPst        = 0.7f;    
-    EvolutionParameters.OffspringPopulationSize = (int) (0.5f * EvolutionParameters.PopulationSize);
-    
-    EvolutionParameters.StatisticsInterval  = 1;
-    
-    EvolutionParameters.IntBlockSize        = sizeof(int)*8;  
-    GlobalDataFileName                      = "";
-    
-    FPrintBest                              = false;
-    
-}// end of TParameters
-//------------------------------------------------------------------------------
+Parameters::Parameters()
+{
+  mEvolutionParameters.populationSize      = 128;
+  mEvolutionParameters.chromosomeSize      = 32;
+  mEvolutionParameters.numOfGenerations    = 100;
 
-/*
+  mEvolutionParameters.mutationPst         = 0.01f;
+  mEvolutionParameters.crossoverPst        = 0.7f;
+  mEvolutionParameters.offspringPopulationSize = (int) (0.5f * mEvolutionParameters.populationSize);
+
+  mEvolutionParameters.statisticsInterval  = 1;
+
+  mEvolutionParameters.intBlockSize        = sizeof(int) * 8;
+  mGlobalDataFileName                      = "";
+
+  mPrintBest                               = false;
+}// end of Parameters
+//----------------------------------------------------------------------------------------------------------------------
+
+/**
  * print usage of the algorithm
  */
-void TParameters::PrintUsageAndExit(){
-    
-  cerr << "Usage: " << endl;  
-  cerr << "  -p Population_size\n";
-  cerr << "  -g Number_of_generations\n";
-  cerr << endl;
-  
-  cerr << "  -m mutation_rate\n";
-  cerr << "  -c crossover_rate\n";
-  cerr << "  -o offspring_rate\n";
-  cerr << endl;
-  
-  cerr << "  -s statistics_interval\n";
-  cerr << endl;
-  
-  cerr << "  -b print best individual\n";
-  cerr << "  -f benchmark_file_name\n";
-  
-          
-  cerr << endl;
-  cerr << "Default Population_size       = 128"  << endl;
-  cerr << "Default Number_of_generations = 100" << endl;
-  cerr << endl;
-  
-  cerr << "Default mutation_rate  = 0.01" << endl;
-  cerr << "Default crossover_rate = 0.7" << endl;
-  cerr << "Default offspring_rate = 0.5" << endl;
-  cerr << endl;
-  
+void Parameters::printUsageAndExit()
+{
+  fprintf(stderr, "Parameters for the genetic algorithm solving knapsack problem: \n");
+  fprintf(stderr, "  -p population_size\n");
+  fprintf(stderr, "  -g number_of_generations\n");
+  fprintf(stderr, "\n");
 
-  cerr << "Default statistics_interval = 1"   << endl;
-  
-  cerr << "Default benchmark_file_name = knapsack_data.txt\n";
-  
+  fprintf(stderr, "  -m mutation_rate\n");
+  fprintf(stderr, "  -c crossover_rate\n");
+  fprintf(stderr, "  -o offspring_rate\n");
+  fprintf(stderr, "\n");
+
+  fprintf(stderr, "  -s statistics_interval\n");
+  fprintf(stderr, "\n");
+
+  fprintf(stderr, "  -b print best individual\n");
+  fprintf(stderr, "  -f benchmark_file_name\n");
+
+
+  fprintf(stderr, "\n");
+  fprintf(stderr, "Default population_size       = 128\n");
+  fprintf(stderr, "Default number_of_generations = 100\n");
+  fprintf(stderr, "\n");
+
+  fprintf(stderr, "Default mutation_rate  = 0.01\n");
+  fprintf(stderr, "Default crossover_rate = 0.7\n");
+  fprintf(stderr, "Default offspring_rate = 0.5\n");
+  fprintf(stderr, "\n");
+
+
+  fprintf(stderr, "Default statistics_interval = 1\n");
+
+  fprintf(stderr, "Default benchmark_file_name = knapsack_data.txt\n");
+
   exit(EXIT_FAILURE);
-    
-}// end of PrintUsage
-//------------------------------------------------------------------------------
+}// end of printUsage
+//----------------------------------------------------------------------------------------------------------------------
 
 
-
-
-
-/*
+/**
  * Print all parameters
- * 
  */
-void TParameters::PrintAllParameters(){
-    printf("-----------------------------------------\n");
-    printf("--- Evolution parameters --- \n");
-    printf("Population size:     %d\n", EvolutionParameters.PopulationSize);
-    printf("Offspring size:      %d\n", EvolutionParameters.OffspringPopulationSize);
-    printf("Chromosome int size: %d\n", EvolutionParameters.ChromosomeSize);
-    printf("Chromosome size:     %d\n", EvolutionParameters.ChromosomeSize * EvolutionParameters.IntBlockSize);
-    
-    printf("Num of generations:  %d\n", EvolutionParameters.NumOfGenerations);
-    printf("\n");
-        
-    
-    printf("Crossover pst:       %f\n", EvolutionParameters.CrossoverPst);
-    printf("Mutation  pst:       %f\n", EvolutionParameters.MutationPst);
-    printf("Crossover  int:      %u\n",EvolutionParameters.CrossoverUINTBoundary);    
-    printf("Mutation  int:       %u\n", EvolutionParameters.MutationUINTBoundary);    
-    printf("\n");
-    
-    printf("Statistics interval: %d\n", EvolutionParameters.StatisticsInterval);
-    
-    printf("\n");
-    printf("Data File: %s\n",GlobalDataFileName.c_str());
-    printf("-----------------------------------------\n");
-    
-    
+void Parameters::printOutAllParameters()
+{
+  printf("-----------------------------------------\n");
+  printf("--- Evolution parameters --- \n");
+  printf("Population size:     %d\n", mEvolutionParameters.populationSize);
+  printf("Offspring size:      %d\n", mEvolutionParameters.offspringPopulationSize);
+  printf("Chromosome int size: %d\n", mEvolutionParameters.chromosomeSize);
+  printf("Chromosome size:     %d\n", mEvolutionParameters.chromosomeSize * mEvolutionParameters.intBlockSize);
+
+  printf("Num of generations:  %d\n", mEvolutionParameters.numOfGenerations);
+  printf("\n");
+
+
+  printf("Crossover pst:       %f\n", mEvolutionParameters.crossoverPst);
+  printf("Mutation  pst:       %f\n", mEvolutionParameters.mutationPst);
+  printf("Crossover  int:      %u\n",mEvolutionParameters.crossoverUintBoundary);
+  printf("Mutation  int:       %u\n", mEvolutionParameters.mutationUintBoundary);
+  printf("\n");
+
+  printf("Statistics interval: %d\n", mEvolutionParameters.statisticsInterval);
+
+  printf("\n");
+  printf("Data File: %s\n",mGlobalDataFileName.c_str());
+  printf("-----------------------------------------\n");
 }// end of PrintAllParameters
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
